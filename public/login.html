@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp API - Iniciar Sesión</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: #25D366;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #25D366;
+        }
+
+        .btn {
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background: #128C7E;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .qr-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .qr-code {
+            max-width: 250px;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .api-key {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+            border: 1px solid #e1e1e1;
+        }
+
+        .copy-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+
+        .status.waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .dashboard-btn {
+            background: #007bff;
+            margin-top: 15px;
+        }
+
+        .dashboard-btn:hover {
+            background: #0056b3;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #25D366;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sessions-list {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .session-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #e1e1e1;
+        }
+
+        .session-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .session-status {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .session-status.ready {
+            color: #28a745;
+        }
+
+        .session-status.waiting {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📱</div>
+        <h1>WhatsApp API</h1>
+        <p class="subtitle">Crea una sesión para obtener tu API Key</p>
+
+        <div id="alert" class="alert"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="sessionName">Nombre de la Sesión:</label>
+                <input type="text" id="sessionName" name="sessionName" placeholder="Ej: MiEmpresa, Personal, etc." required>
+            </div>
+            <button type="submit" class="btn" id="createBtn">
+                Crear Sesión
+            </button>
+        </form>
+
+        <div id="qrSection" class="qr-section">
+            <h3>Escanea el código QR con WhatsApp</h3>
+            <div id="status" class="status waiting">
+                <span class="loading"></span>
+                Esperando conexión de WhatsApp...
+            </div>
+            <img id="qrCode" class="qr-code" alt="Código QR">
+            
+            <div id="apiKeySection" style="display: none;">
+                <h4>Tu API Key:</h4>
+                <div class="api-key">
+                    <span id="apiKey"></span>
+                    <button class="copy-btn" onclick="copyApiKey()">Copiar</button>
+                </div>
+                <p><strong>⚠️ Importante:</strong> Guarda esta API Key de forma segura. La necesitarás para hacer peticiones a la API.</p>
+                <button class="btn dashboard-btn" onclick="goToDashboard()">Ir al Dashboard</button>
+            </div>
+        </div>
+
+        <div id="sessionsList" class="sessions-list" style="display: none;">
+            <h3>Sesiones Activas</h3>
+            <div id="sessionsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserId = null;
+        let currentApiKey = null;
+        let statusCheckInterval = null;
+
+        // Cargar sesiones existentes al cargar la página
+        window.addEventListener('load', loadActiveSessions);
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const sessionName = document.getElementById('sessionName').value.trim();
+            if (!sessionName) {
+                showAlert('Por favor ingresa un nombre de sesión', 'error');
+                return;
+            }
+
+            const createBtn = document.getElementById('createBtn');
+            createBtn.disabled = true;
+            createBtn.innerHTML = '<span class="loading"></span>Creando sesión...';
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ sessionName })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentUserId = data.userId;
+                    currentApiKey = data.apiKey;
+                    
+                    showAlert(data.message, 'success');
+                    document.getElementById('apiKey').textContent = data.apiKey;
+                    document.getElementById('qrSection').style.display = 'block';
+                    document.getElementById('loginForm').style.display = 'none';
+                    
+                    // Comenzar a verificar el estado
+                    startStatusCheck();
+                } else {
+                    showAlert(data.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Error al crear la sesión: ' + error.message, 'error');
+            } finally {
+                createBtn.disabled = false;
+                createBtn.innerHTML = 'Crear Sesión';
+            }
+        });
+
+        async function startStatusCheck() {
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+
+            statusCheckInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/auth/status/${currentUserId}`);
+                    const data = await response.json();
+
+                    if (data.isReady) {
+                        // WhatsApp conectado
+                        document.getElementById('status').className = 'status connected';
+                        document.getElementById('status').innerHTML = '✅ WhatsApp conectado correctamente';
+                        document.getElementById('qrCode').style.display = 'none';
+                        document.getElementById('apiKeySection').style.display = 'block';
+                        clearInterval(statusCheckInterval);
+                    } else if (data.qrCode) {
+                        // Mostrar QR
+                        document.getElementById('qrCode').src = data.qrCode;
+                        document.getElementById('qrCode').style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Error verificando estado:', error);
+                }
+            }, 2000);
+        }
+
+        async function loadActiveSessions() {
+            try {
+                const response = await fetch('/api/admin/sessions');
+                const data = await response.json();
+                
+                if (data.sessions && data.sessions.length > 0) {
+                    displaySessions(data.sessions);
+                }
+            } catch (error) {
+                console.error('Error cargando sesiones:', error);
+            }
+        }
+
+        function displaySessions(sessions) {
+            const container = document.getElementById('sessionsContainer');
+            const sessionsList = document.getElementById('sessionsList');
+            
+            container.innerHTML = '';
+            
+            sessions.forEach(session => {
+                const sessionDiv = document.createElement('div');
+                sessionDiv.className = 'session-item';
+                
+                const statusClass = session.isReady ? 'ready' : 'waiting';
+                const statusText = session.isReady ? '✅ Conectado' : session.hasQR ? '⏳ Esperando QR' : '🔄 Iniciando';
+                
+                sessionDiv.innerHTML = `
+                    <div class="session-name">${session.sessionName}</div>
+                    <div class="session-status ${statusClass}">${statusText}</div>
+                `;
+                
+                container.appendChild(sessionDiv);
+            });
+            
+            sessionsList.style.display = 'block';
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert ${type}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        function copyApiKey() {
+            const apiKey = document.getElementById('apiKey').textContent;
+            navigator.clipboard.writeText(apiKey).then(() => {
+                showAlert('API Key copiada al portapapeles', 'success');
+            }).catch(() => {
+                showAlert('Error al copiar API Key', 'error');
+            });
+        }
+
+        function goToDashboard() {
+            localStorage.setItem('apiKey', currentApiKey);
+            window.location.href = '/dashboard';
+        }
+    </script>
+</body>
+</html>
